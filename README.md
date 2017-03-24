@@ -1,5 +1,7 @@
 # Inexor Web Console
 
+The *Inexor Web Console* is a web interface for the Inexor Flex command line API. Within the game client the *Inexor Web Console* rendered on a transparent layer in front of the game.
+
 ## Console Input Handling
 
 1. [UI-Console] User enters a command
