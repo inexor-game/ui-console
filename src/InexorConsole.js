@@ -9,10 +9,13 @@ export default class InexorHud {
 
     this.root = new tree.Root();
     this.treeWebsocket = new WebSocket("ws://localhost:31416/api/v1/ws/tree");
-    this.treeWebsocket.onmessage = this.onTreeMessage.bind(this);
+    // TODO: handle updates on the console configuration (size, colors, ...)
+    // this.treeWebsocket.onmessage = this.onTreeMessage.bind(this);
 
     this.consoleWebsocket = new WebSocket("ws://localhost:31416/api/v1/ws/console");
-    this.consoleWebsocket.onmessage = this.onConsoleMessage.bind(this);
+    this.consoleWebsocket.onmessage = this.onConsoleWsMessage.bind(this);
+    this.consoleWebsocket.onopen = this.onConsoleWsOpen.bind(this);
+    this.consoleWebsocket.onerror = this.onConsoleWsError.bind(this);
 
     // Contains the console instances
     this.consoleInstances = {};
@@ -20,12 +23,6 @@ export default class InexorHud {
     // The instance id
     this.instanceId = this.getInstanceId();
     console.log('Instance ID: ' + this.instanceId);
-    
-    setTimeout(this.init.bind(this), 200);
-  }
-
-  init() {
-    this.createConsole(this.instanceId);
   }
 
   createConsole(instanceId) {
@@ -35,14 +32,79 @@ export default class InexorHud {
 
     // The console widget
     this.consoleInstances[instanceId] = $('#console-' + instanceId).jqconsole(util.format('Inexor Web Console %s\n\n', instanceId), '>>> ');
-    this.consoleWebsocket.send(JSON.stringify({
-      'type': 'get'
-    }));    
-    this.write(instanceId, 'Console output');
+
+    // Request the console buffer
+    this.sendInit(instanceId);
+
+    // Start the prompt
+    this.prompt(instanceId);
+
   }
 
-  write(instanceId, message) {
-    this.consoleInstances[instanceId].Write(message + '\n', 'jqconsole-output');
+  onConsoleWsMessage(event) {
+    // TODO: remove next line
+    // console.log('Received message: ' + event.data);
+    let request = JSON.parse(event.data);
+    switch (request.type) {
+      case 'log':
+        this.log(request);
+        break;
+      case 'chat':
+        this.chat(request);
+        break;
+      default:
+        break;
+    }
+  }
+
+  onConsoleWsOpen() {
+    this.createConsole(this.instanceId);
+  }
+
+  onConsoleWsError(error) {
+    console.log('Websocket error: ' + error);
+  }
+
+  log(request) {
+    this.write(request.instanceId, util.format('[%s] %s', request.level, request.message), util.format('log-%s', request.level));
+  }
+
+  chat(request) {
+    this.write(request.instanceId, util.format('%s: %s', request.fromName, request.message), util.format('chat-%s', request.chatTarget));
+  }
+
+  prompt(instanceId) {
+    this.consoleInstances[instanceId].Prompt(true, (input) => {
+      // TODO: remove next line
+      this.write(instanceId, input, 'jqconsole-input');
+      this.send(instanceId, input);
+      this.prompt(instanceId);
+    });
+    
+  }
+
+  write(instanceId, message, style = 'console') {
+    this.consoleInstances[instanceId].Write(message + '\n', util.format('jqconsole-%s', style));
+  }
+
+  send(instanceId, input) {
+    let message = JSON.stringify({
+      'state': 'input',
+      'instanceId': instanceId,
+      'input': input
+    });
+    console.log('Sending message: ' + message);
+    this.consoleWebsocket.send(message);
+  }
+
+  sendInit(instanceId) {
+    let message = JSON.stringify({
+      'state': 'init',
+      'instanceId': instanceId
+    });
+    // TODO: remove next line
+    console.log('Sending message: ' + message);
+    this.consoleWebsocket.send(message);
   }
 
   onTreeMessage(event) {
@@ -77,17 +139,6 @@ export default class InexorHud {
     }
   }
 
-  onConsoleMessage(event) {
-    let request = JSON.parse(event.data);
-    switch (request.type) {
-      case 'chat':
-        this.write(request.instanceId, request.message);
-        break;
-      default:
-        break;
-    }
-  }
-
   /**
    * Extracts the instance id from the URL.
    * @function
@@ -100,13 +151,10 @@ export default class InexorHud {
       let params = query[1].split('&');
       for (var i = 0; i < params.length; i++) {
         if (params[i].split('=')[0] == 'instanceId') {
-          let instanceId = params[i].split('=')[1];
-          // this.jqconsole.Write('Instance id: ' + instanceId + '\n', 'jqconsole-output');
-          return instanceId;
+          return params[i].split('=')[1];
         }
       }
     }
-    // this.jqconsole.Write('No instance id\n', 'jqconsole-output');
     return '';
   }
 

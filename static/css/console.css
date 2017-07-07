@@ -6,7 +6,7 @@ html, body {
   background-color: transparent;
   color: white;
 
-  font-size: 12pt;
+  font-size: 11pt;
   font-family: monospace;
 }
 
@@ -59,6 +59,28 @@ html, body {
 }
 
 /* The text color of the output. */
-.jqconsole-output {
-  color: white;
+.jqconsole-log-error {
+  color: red;
+}
+
+.jqconsole-log-warn {
+  color: orange;
+}
+
+.jqconsole-log-info {
+  color: green;
+}
+
+.jqconsole-log-debug {
+  color: blue;
+}
+
+/* The console message. */
+.jqconsole-chat-all {
+  color: green;
+}
+
+/* The console message. */
+.jqconsole-chat-team {
+  color: blue;
 }
