@@ -1,14 +1,10 @@
 {
-  "name": "@inexor-game/ui-console",
+  "name": "@inexor-ui/ui-console",
   "version": "0.9.0",
   "description": "The Inexor Web Console is a web interface for the Inexor Flex command line API.",
-  "main": "index.js",
-  "scripts": {
-    "test": "mocha $(find . -not -iwholename '*node_modules*' -iwholename '*test*' -name '*.js')"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/inexor-game/ui-console.git"
+    "url": "git+https://github.com/inexorgame/ui-console.git"
   },
   "keywords": [
     "inexor",
@@ -19,10 +15,39 @@
   "author": "The Inexor Team",
   "license": "Zlib",
   "bugs": {
-    "url": "https://github.com/inexor-game/ui-console/issues"
+    "url": "https://github.com/inexorgame/inexor-core/issues"
   },
-  "homepage": "https://github.com/inexor-game/ui-console#readme",
+  "private": true,
+  "homepage": "https://github.com/inexorgame/ui-console#readme",
+  "scripts": {
+    "build": "node_modules/.bin/webpack -p",
+    "dev": "node_modules/.bin/webpack-dev-server --progress --colors"
+  },
   "dependencies": {
-    "jq-console": "^2.13.2"
-  }
+    "css-loader": "^0.28.4",
+    "jq-console": "^2.13.2",
+    "jquery": "^3.2.1",
+    "normalize.css": "^7.0.0",
+    "style-loader": "^0.18.2",
+    "webpack": "^3.0.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.25.0",
+    "babel-loader": "^7.1.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-env": "^1.5.2",
+    "babel-preset-es2015": "^6.24.1",
+    "html-webpack-plugin": "^2.29.0",
+    "webpack-dev-server": "^2.5.0"
+  },
+  "engines": {
+    "node": ">= 4.0.0",
+    "npm": ">= 3.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
 }
