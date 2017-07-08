@@ -44,16 +44,20 @@ export default class InexorHud {
   onConsoleWsMessage(event) {
     // TODO: remove next line
     // console.log('Received message: ' + event.data);
-    let request = JSON.parse(event.data);
-    switch (request.type) {
-      case 'log':
-        this.log(request);
-        break;
-      case 'chat':
-        this.chat(request);
-        break;
-      default:
-        break;
+    try {
+      let request = JSON.parse(event.data);
+      switch (request.type) {
+        case 'log':
+          this.log(request);
+          break;
+        case 'chat':
+          this.chat(request);
+          break;
+        default:
+          break;
+      }
+    } catch (err) {
+      console.log(err);
     }
   }
 
@@ -77,7 +81,11 @@ export default class InexorHud {
     this.consoleInstances[instanceId].Prompt(true, (input) => {
       // TODO: remove next line
       this.write(instanceId, input, 'jqconsole-input');
-      this.send(instanceId, input);
+      try {
+        this.send(instanceId, input);
+      } catch (err) {
+        console.log(err);
+      }
       this.prompt(instanceId);
     });
     
@@ -93,6 +101,7 @@ export default class InexorHud {
       'instanceId': instanceId,
       'input': input
     });
+    // TODO: remove next line
     console.log('Sending message: ' + message);
     this.consoleWebsocket.send(message);
   }
