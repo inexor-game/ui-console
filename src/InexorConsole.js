@@ -26,15 +26,17 @@ export default class InexorConsole {
      */
     this.treeWebsocket = new WebSocket(util.format('ws://%s:%s/api/v1/ws/tree', this.parameters.host, this.parameters.port));
     // TODO: handle updates on the console configuration (size, colors, ...)
-    // this.treeWebsocket.onmessage = this.onTreeMessage.bind(this);
+    this.treeWebsocket.onmessage = this.onTreeMessage.bind(this);
+    this.treeWebsocket.onopen = this.onTreeOpen.bind(this);
+    this.treeWebsocket.onerror = this.onTreeError.bind(this);
 
     /**
      * Open websocket for the console.
      */
     this.consoleWebsocket = new WebSocket(util.format('ws://%s:%s/api/v1/ws/console', this.parameters.host, this.parameters.port));
-    this.consoleWebsocket.onmessage = this.onConsoleWsMessage.bind(this);
-    this.consoleWebsocket.onopen = this.onConsoleWsOpen.bind(this);
-    this.consoleWebsocket.onerror = this.onConsoleWsError.bind(this);
+    this.consoleWebsocket.onmessage = this.onConsoleMessage.bind(this);
+    this.consoleWebsocket.onopen = this.onConsoleOpen.bind(this);
+    this.consoleWebsocket.onerror = this.onConsoleError.bind(this);
 
     // Contains the console instances
     this.consoleInstances = {};
@@ -46,8 +48,13 @@ export default class InexorConsole {
     // Add dom node
     $('body').append(util.format('<div id="console-%s" class="console"></div>', instanceId));
 
+    let domNode = $('#console-' + instanceId);
+
     // The console widget
-    this.consoleInstances[instanceId] = $('#console-' + instanceId).jqconsole(util.format('Inexor Web Console %s\n\n', instanceId), '>>> ');
+    this.consoleInstances[instanceId] = domNode.jqconsole(util.format('Inexor Web Console %s\n\n', instanceId), '>>> ');
+    
+    // Hide the scroll bar!
+    domNode.children().css('overflow', 'hidden');
 
     // Request the console buffer
     this.sendInit(instanceId);
@@ -55,9 +62,13 @@ export default class InexorConsole {
     // Start the prompt
     this.prompt(instanceId);
 
+    setInterval(() => {
+      domNode.scrollTop($(document).height());
+    }, 1000);
+
   }
 
-  onConsoleWsMessage(event) {
+  onConsoleMessage(event) {
     // TODO: remove next line
     // console.log('Received message: ' + event.data);
     try {
@@ -77,11 +88,11 @@ export default class InexorConsole {
     }
   }
 
-  onConsoleWsOpen() {
+  onConsoleOpen() {
     this.createConsole(this.parameters.instanceId);
   }
 
-  onConsoleWsError(error) {
+  onConsoleError(error) {
     console.log('Websocket error: ' + error);
   }
 
@@ -162,6 +173,19 @@ export default class InexorConsole {
       default:
         break;
     }
+  }
+
+  onTreeOpen() {
+  }
+
+  onTreeError(error) {
+    console.log('Websocket error: ' + error);
+  }
+
+  getNode(path) {
+    this.treeWebsocket.send(JSON.stringify({
+      path: path
+    }));
   }
 
   /**
