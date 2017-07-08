@@ -3,7 +3,7 @@ import $ from 'jquery';
 import jqConsole from 'jq-console';
 import util from 'util';
 
-export default class InexorHud {
+export default class InexorConsole {
 
   constructor() {
 
